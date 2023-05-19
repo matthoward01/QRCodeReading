@@ -100,7 +100,7 @@ namespace QRCodeReading
                     Console.WriteLine(fileName + "|" + resultText);
                     using (StreamWriter writer = new StreamWriter(outputFile, append: true))
                     {
-                        writer.WriteLine(fileName + "|" + resultText);
+                        writer.WriteLine(fileName + "|" + resultText + "|" + Path.GetFileNameWithoutExtension(resultText));
                     }
                 }                
             }
