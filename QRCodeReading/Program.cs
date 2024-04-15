@@ -10,6 +10,11 @@ using ZXing;
 using PdfToImage;
 using System.Threading;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net;
+using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace QRCodeReading
 {
@@ -56,7 +61,7 @@ namespace QRCodeReading
             string outputFile = Path.Combine(Path.GetFullPath(pdfDirectory), string.Format("{0}", "QRCodes.txt"));
             foreach (string f in filesList)
             {
-                if (!f.Contains(".DS_Store") && f.EndsWith(".pdf"))
+                if (!f.Contains(".DS_Store") && f.EndsWith(".pdf") && (f.EndsWith(".pdf") || f.EndsWith(".jpg") || f.EndsWith(".jpeg") || f.EndsWith(".tif") || f.EndsWith(".png")))
                 {
                     GetImages(f, "Temp\\", outputFile, resolution);
                 }
@@ -80,7 +85,7 @@ namespace QRCodeReading
             List<Thread> finalThreads = new List<Thread>();
             foreach (string f in filesList)
             {
-                if (!f.Contains(".DS_Store") && f.EndsWith(".pdf"))
+                if (!f.Contains(".DS_Store") && (f.EndsWith(".pdf") || f.EndsWith(".jpg") || f.EndsWith(".jpeg") || f.EndsWith(".tif") || f.EndsWith(".png")))
                 {
                     finalThreads.AddRange(GetImagesThreaded(f, "Temp\\", outputFile, resolution));
                 }
@@ -110,26 +115,41 @@ namespace QRCodeReading
 
         private static void GetImages(string sourcePdf, string tempFolder, string outputFile, string resolution)
         {
-            PdfDocument doc = new PdfDocument();
-            doc.LoadFromFile(sourcePdf);
-            //List<Thread> listOfThreads = new List<Thread>();
-            for (int i = 0; i < doc.Pages.Count; i++)
+            if (sourcePdf.ToLower().EndsWith(".pdf"))
             {
-                PdfPageBase page = doc.Pages[i];
+                PdfDocument doc = new PdfDocument();
+                doc.LoadFromFile(sourcePdf);
+                //List<Thread> listOfThreads = new List<Thread>();
+                for (int i = 0; i < doc.Pages.Count; i++)
+                {
+                    PdfPageBase page = doc.Pages[i];
 
-                //System.Drawing.Image image = doc.SaveAsImage(0);
+                    //System.Drawing.Image image = doc.SaveAsImage(0);
 
+                    if (!int.TryParse(resolution, out int res))
+                    {
+                        Console.WriteLine("Try again using a number for the resolution.");
+                    }
+
+                    tempFolder = Path.Combine(tempFolder, string.Format(@"{0}.jpg", Path.GetFileNameWithoutExtension(sourcePdf)));
+                    JpgCreate(sourcePdf, tempFolder, 100, res, res, 1, 1);
+
+                    GetQRCodeString(Path.GetFileNameWithoutExtension(sourcePdf), tempFolder, outputFile);
+                    //Thread t = new Thread(() => GetQRCodeString(Path.GetFileNameWithoutExtension(sourcePdf), tempFolder, outputFile));
+                    //listOfThreads.Add(t);
+                }
+            }
+            else
+            {
                 if (!int.TryParse(resolution, out int res))
                 {
                     Console.WriteLine("Try again using a number for the resolution.");
                 }
 
-                tempFolder = Path.Combine(tempFolder, string.Format(@"{0}.jpg", Path.GetFileNameWithoutExtension(sourcePdf)));
                 JpgCreate(sourcePdf, tempFolder, 100, res, res, 1, 1);
-                
+
                 GetQRCodeString(Path.GetFileNameWithoutExtension(sourcePdf), tempFolder, outputFile);
-                //Thread t = new Thread(() => GetQRCodeString(Path.GetFileNameWithoutExtension(sourcePdf), tempFolder, outputFile));
-                //listOfThreads.Add(t);
+
             }
 
             //return listOfThreads;
@@ -210,6 +230,7 @@ namespace QRCodeReading
                         {
                             writer.WriteLine(fileName + "|" + resultText + "|" + Path.GetFileNameWithoutExtension(resultText));
                         }
+                        //CheckUrl(resultText);
                         //writeOutLIst.Add(fileName + "|" + resultText + "|" + Path.GetFileNameWithoutExtension(resultText));
 
                     }
@@ -235,6 +256,44 @@ namespace QRCodeReading
                 {
                     writer.WriteLine(fileName + "|" + "Error + " + e.Message);
                 }
+            }
+        }
+
+        private static void CheckUrl(string url)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    /*WebClient wc = new WebClient();
+                    string html = wc.DownloadString(url);
+
+                    Regex x = new Regex("<title>(.*)</title>");
+                    MatchCollection m = x.Matches(html);
+                    if (m.Count > 0)
+                    {
+                        string title = m[0].Value.Replace("<title>", "").Replace("</title>", "");
+                    }
+                    client.BaseAddress = new Uri(url);*/
+                    //client.DefaultRequestHeaders.Accept.Clear();
+                    //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    HttpResponseMessage response = client.GetAsync("https://www.carpetone.com/qr/vinyl/M779945").Result;
+
+
+                    if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    {
+                        var jsonResponse = response.Content.ReadAsStringAsync();
+                        Console.WriteLine(jsonResponse);
+                        client.Dispose();
+                    }
+                    else
+                    {
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
