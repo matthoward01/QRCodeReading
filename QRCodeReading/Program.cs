@@ -26,7 +26,7 @@ namespace QRCodeReading
 
         private static void GetQrCodes(string pdfDirectory, string resolution)
         {
-            string[] files = Directory.GetFiles(pdfDirectory);
+            string[] files = Directory.EnumerateFiles(pdfDirectory, "*.*", SearchOption.AllDirectories).ToArray();
             List<string> filesList = files.ToList();
             filesList.Sort();
             if (Directory.Exists("Temp"))
@@ -37,7 +37,7 @@ namespace QRCodeReading
             string outputFile = Path.Combine(Path.GetFullPath(pdfDirectory), string.Format("{0}", "QRCodes.txt"));
             foreach (string f in filesList)
             {
-                if (!f.Contains(".DS_Store") && f.EndsWith(".pdf") && (f.EndsWith(".pdf") || f.EndsWith(".jpg") || f.EndsWith(".jpeg") || f.EndsWith(".tif") || f.EndsWith(".png")))
+                if (!f.Contains(".DS_Store") && f.ToLower().EndsWith(".pdf") && (f.ToLower().EndsWith(".pdf") || f.ToLower().EndsWith(".jpg") || f.ToLower().EndsWith(".jpeg") || f.ToLower().EndsWith(".tif") || f.ToLower().EndsWith(".png")))
                 {
                     GetImages(f, "Temp\\", outputFile, resolution);
                 }
