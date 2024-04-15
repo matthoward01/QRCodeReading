@@ -42,7 +42,7 @@ namespace QRCodeReading
 
         private static async Task ProcessFileAsync(string file, string resolution, string outputFile)
         {
-            if (!file.Contains(".DS_Store") && (file.EndsWith(".pdf") || file.EndsWith(".jpg") || file.EndsWith(".jpeg") || file.EndsWith(".tif") || file.EndsWith(".png")))
+            if (!file.Contains(".DS_Store") && (file.ToLower().EndsWith(".pdf") || file.ToLower().EndsWith(".jpg") || file.ToLower().EndsWith(".jpeg") || file.ToLower().EndsWith(".tif") || file.ToLower().EndsWith(".png")))
             {
                 await Task.Run(() => GetImages(file, "Temp\\", outputFile, resolution));
             }
