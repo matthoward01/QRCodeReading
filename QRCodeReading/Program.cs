@@ -73,6 +73,7 @@ namespace QRCodeReading
                     JpgCreate(sourcePdf, tempFolder, 100, res, res, 1, 1);
 
                     GetQRCodeString(Path.GetFileNameWithoutExtension(sourcePdf), tempFolder, outputFile);
+                    resolutionInc = 350;
                 }
             }
             else
